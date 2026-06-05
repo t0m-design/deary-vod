@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>디어리 VOD 아카이브</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600&family=DM+Mono&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+<style>
+:root {
+  --bg0:#0a0a0d;--bg1:#111116;--bg2:#16161d;--bg3:#1c1c25;
+  --bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.12);
+  --t1:#eeeef4;--t2:#8888a0;--t3:#44444e;
+  --acc:#7c5cfc;--acc-bg:rgba(124,92,252,0.12);--acc-lt:#c4b5fd;
+  --warn:#f59e0b;--warn-bg:rgba(245,158,11,0.1);
+  --ok:#4ade80;--ok-bg:rgba(74,222,128,0.08);
+  --danger:#f87171;--danger-bg:rgba(248,113,113,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg0);color:var(--t1);min-height:100vh;padding:0 0 80px}
+.shell{max-width:860px;margin:0 auto;padding:0 20px}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:28px 0 22px;border-bottom:0.5px solid var(--bd);margin-bottom:24px}
+.hdr-l{display:flex;align-items:center;gap:11px}
+.logo-circle{width:38px;height:38px;background:var(--acc-bg);border:0.5px solid var(--acc);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.logo-circle i{font-size:19px;color:var(--acc-lt)}
+.brand{font-size:16px;font-weight:600;color:var(--t1)}
+.brand-sub{font-size:11px;color:var(--t3);margin-top:1px}
+.btn-add{display:flex;align-items:center;gap:6px;background:var(--acc);color:#fff;border:none;border-radius:8px;padding:9px 17px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-add:hover{opacity:.85}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:22px}
+.stat{background:var(--bg2);border:0.5px solid var(--bd);border-radius:10px;padding:12px 14px}
+.stat-lbl{font-size:11px;color:var(--t3);letter-spacing:.3px;text-transform:uppercase;margin-bottom:4px}
+.stat-val{font-size:20px;font-weight:600;color:var(--t1);font-family:'DM Mono',monospace}
+.stat-val.pu{color:var(--acc-lt)}.stat-val.wa{color:var(--warn)}
+.filter-row{display:flex;align-items:center;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.s-wrap{flex:1;min-width:160px;position:relative}
+.s-wrap i{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:14px;pointer-events:none}
+.s-inp{width:100%;background:var(--bg2);border:0.5px solid var(--bd);border-radius:7px;padding:7px 10px 7px 29px;color:var(--t1);font-size:13px;outline:none;font-family:inherit}
+.s-inp::placeholder{color:var(--t3)}.s-inp:focus{border-color:var(--acc)}
+.ftag{background:var(--bg2);border:0.5px solid var(--bd);color:var(--t2);border-radius:20px;padding:5px 13px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s}
+.ftag.on{background:var(--acc-bg);border-color:var(--acc);color:var(--acc-lt)}
+.ftag:hover:not(.on){border-color:var(--bd2);color:var(--t1)}
+.sort-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.sort-lbl{font-size:12px;color:var(--t3)}
+.sort-sel{background:var(--bg2);border:0.5px solid var(--bd);color:var(--t2);border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer;font-family:inherit;outline:none}
+.cnt-lbl{margin-left:auto;font-size:12px;color:var(--t3);font-family:'DM Mono',monospace}
+.vod-list{display:flex;flex-direction:column;gap:8px}
+.vod-card{background:var(--bg1);border:0.5px solid var(--bd);border-radius:10px;padding:13px 15px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;transition:border-color .15s}
+.vod-card:hover{border-color:var(--bd2)}
+.vod-card.permanent{border-left:2px solid var(--acc)}
+.vod-card.expiring{border-left:2px solid var(--warn)}
+.vod-card.expired{border-left:2px solid #2a2a36;opacity:.5}
+.vod-card.active{border-left:2px solid var(--ok)}
+.vod-title{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:7px;line-height:1.45}
+.vod-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mt{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--t3)}
+.mt i{font-size:13px}.mt.views{color:var(--acc-lt)}.mt.updated{font-size:11px}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.b-perm{background:var(--acc-bg);color:var(--acc-lt);border:0.5px solid rgba(124,92,252,.3)}
+.b-soon{background:var(--warn-bg);color:var(--warn);border:0.5px solid rgba(245,158,11,.3)}
+.b-ok{background:var(--ok-bg);color:var(--ok);border:0.5px solid rgba(74,222,128,.2)}
+.b-exp{background:rgba(255,255,255,.03);color:var(--t3);border:0.5px solid var(--bd)}
+.vod-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+.expire-info{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;text-align:right}
+.actions{display:flex;gap:5px}
+.act{background:transparent;border:0.5px solid var(--bd);color:var(--t3);border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:all .15s}
+.act:hover{border-color:var(--acc);color:var(--acc-lt);background:var(--acc-bg)}
+.act.del:hover{border-color:rgba(248,113,113,.4);color:var(--danger);background:var(--danger-bg)}
+.act.upd:hover{border-color:rgba(74,222,128,.3);color:var(--ok);background:var(--ok-bg)}
+.empty{text-align:center;padding:50px 20px;color:var(--t3)}
+.empty i{font-size:36px;display:block;margin-bottom:10px;color:var(--bg3)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--bg2);border:0.5px solid var(--bd2);border-radius:12px;padding:22px;width:100%;max-width:480px;animation:modalIn .18s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-title{font-size:15px;font-weight:600;color:var(--t1)}
+.modal-x{background:transparent;border:none;color:var(--t2);cursor:pointer;font-size:18px;display:flex}
+.modal-x:hover{color:var(--t1)}
+.fld{margin-bottom:13px}
+.fld label{display:block;font-size:12px;color:var(--t2);margin-bottom:4px}
+.fld input,.fld select{width:100%;background:var(--bg1);border:0.5px solid var(--bd2);border-radius:7px;padding:8px 11px;color:var(--t1);font-size:13px;outline:none;font-family:inherit}
+.fld input:focus,.fld select:focus{border-color:var(--acc)}
+.fld input::placeholder{color:var(--t3)}
+.fld select option{background:var(--bg2)}
+.fld-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.hint{font-size:11px;color:var(--t3);margin-top:4px}
+.auto-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;background:var(--ok-bg);color:var(--ok);border:0.5px solid rgba(74,222,128,.2);border-radius:20px;padding:2px 8px;margin-left:6px}
+.modal-footer{display:flex;gap:7px;justify-content:flex-end;margin-top:18px}
+.btn-c{background:transparent;border:0.5px solid var(--bd2);color:var(--t2);border-radius:7px;padding:8px 16px;cursor:pointer;font-size:13px;font-family:inherit}
+.btn-c:hover{background:var(--bg3)}
+.btn-s{background:var(--acc);border:none;color:#fff;border-radius:7px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:500;font-family:inherit}
+.btn-s:hover{opacity:.88}
+.update-modal{background:var(--bg2);border:0.5px solid var(--bd2);border-radius:12px;padding:22px;width:100%;max-width:380px;animation:modalIn .18s ease}
+.btm-bar{display:flex;gap:8px;justify-content:center;margin-top:28px}
+.btm-btn{background:var(--bg2);border:0.5px solid var(--bd);color:var(--t2);border-radius:20px;padding:6px 15px;font-size:12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px}
+.btm-btn:hover{border-color:var(--bd2);color:var(--t1)}
+.info-box{background:rgba(245,158,11,.06);border:0.5px solid rgba(245,158,11,.2);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--warn);margin-bottom:22px;display:flex;align-items:flex-start;gap:7px;line-height:1.5}
+.info-box i{font-size:15px;flex-shrink:0;margin-top:1px}
+@media(max-width:540px){
+  .stats{grid-template-columns:1fr 1fr}
+  .hdr{flex-direction:column;gap:12px;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="hdr">
+    <div class="hdr-l">
+      <div class="logo-circle"><i class="ti ti-device-tv"></i></div>
+      <div>
+        <div class="brand">디어리 VOD 아카이브</div>
+        <div class="brand-sub">다시보기 조회수 &amp; 영구보관 현황</div>
+      </div>
+    </div>
+    <button class="btn-add" onclick="openAdd()"><i class="ti ti-plus"></i> VOD 추가</button>
+  </header>
+
+  <div class="info-box">
+    <i class="ti ti-bolt"></i>
+    <div>방송 날짜를 입력하면 <strong>만료일이 자동 계산</strong>돼요 (보관 기간 2년 기준). 조회수는 카드의 초록 버튼으로 언제든지 간편하게 갱신할 수 있어요.</div>
+  </div>
+
+  <div class="stats" id="statsEl"></div>
+
+  <div class="filter-row">
+    <div class="s-wrap">
+      <i class="ti ti-search"></i>
+      <input class="s-inp" id="searchEl" placeholder="VOD 제목 검색..." oninput="render()">
+    </div>
+    <button class="ftag on" onclick="setF('all',this)">전체</button>
+    <button class="ftag" onclick="setF('permanent',this)">영구보관</button>
+    <button class="ftag" onclick="setF('expiring',this)">만료 임박</button>
+    <button class="ftag" onclick="setF('expired',this)">만료됨</button>
+  </div>
+
+  <div class="sort-row">
+    <span class="sort-lbl">정렬</span>
+    <select class="sort-sel" id="sortEl" onchange="render()">
+      <option value="date-desc">최신 방송순</option>
+      <option value="date-asc">오래된순</option>
+      <option value="views-desc">조회수 높은순</option>
+      <option value="expire-asc">만료 임박순</option>
+    </select>
+    <span class="cnt-lbl" id="cntEl"></span>
+  </div>
+
+  <div class="vod-list" id="listEl"></div>
+
+  <div class="btm-bar">
+    <button class="btm-btn" onclick="exportData()"><i class="ti ti-download"></i>백업 저장 (JSON)</button>
+    <label class="btm-btn" style="cursor:pointer"><i class="ti ti-upload"></i>백업 불러오기<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
+  </div>
+</div>
+
+<!-- 추가/수정 모달 -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="modalTitle">VOD 추가</span>
+      <button class="modal-x" onclick="closeAdd()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fld">
+      <label>VOD 제목 *</label>
+      <input id="f-title" placeholder="예) 오늘도 즐거운 방송!">
+    </div>
+    <div class="fld">
+      <label>SOOP 링크</label>
+      <input id="f-url" placeholder="https://vod.soop.com/...">
+    </div>
+    <div class="fld-row">
+      <div class="fld">
+        <label>순수 조회수</label>
+        <input id="f-views" type="number" placeholder="예) 15200">
+      </div>
+      <div class="fld">
+        <label>방송 날짜 * <span class="auto-badge"><i class="ti ti-bolt" style="font-size:10px"></i>자동 계산</span></label>
+        <input id="f-date" type="date" oninput="autoExpire()">
+        <div class="hint" id="autoHint"></div>
+      </div>
+    </div>
+    <div class="fld">
+      <label>보관 유형</label>
+      <select id="f-type" onchange="toggleExpire()">
+        <option value="auto">기간 보관 (자동 계산 2년)</option>
+        <option value="permanent">영구보관</option>
+        <option value="custom">직접 입력</option>
+      </select>
+    </div>
+    <div class="fld" id="expFld" style="display:none">
+      <label>만료일 직접 입력</label>
+      <input id="f-expire" type="date">
+    </div>
+    <div class="fld">
+      <label>메모 (선택)</label>
+      <input id="f-memo" placeholder="예) 특집 방송, 콜라보 등">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-c" onclick="closeAdd()">취소</button>
+      <button class="btn-s" onclick="saveVod()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 조회수 업데이트 모달 -->
+<div class="overlay" id="updOverlay">
+  <div class="update-modal">
+    <div class="modal-hdr">
+      <span class="modal-title">조회수 업데이트</span>
+      <button class="modal-x" onclick="closeUpd()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fld">
+      <label id="updTitle" style="font-size:13px;color:var(--t1);margin-bottom:8px;display:block;line-height:1.4;font-weight:500"></label>
+      <label style="font-size:12px;color:var(--t2)">최신 조회수</label>
+      <input id="upd-views" type="number" placeholder="SOOP에서 확인한 조회수 입력">
+      <div class="hint">SOOP VOD 페이지에서 확인한 최신 조회수를 입력해주세요</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-c" onclick="closeUpd()">취소</button>
+      <button class="btn-s" onclick="applyUpd()">업데이트</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SK='deary_vods2';
+let vods=[],nextId=1,filt='all',editId=null,updId=null;
+
+function load(){try{const d=JSON.parse(localStorage.getItem(SK)||'{}');vods=d.vods||[];nextId=d.nextId||vods.length+1;}catch{vods=[];}}
+function save(){localStorage.setItem(SK,JSON.stringify({vods,nextId}));}
+
+function daysLeft(exp){if(!exp)return null;return Math.ceil((new Date(exp)-new Date())/86400000);}
+function autoExpireDate(date){if(!date)return null;const d=new Date(date);d.setDate(d.getDate()+730);return d.toISOString().slice(0,10);}
+function status(v){
+  if(v.type==='permanent')return 'permanent';
+  const d=daysLeft(v.expire);
+  if(d===null)return 'active';
+  if(d<0)return 'expired';
+  if(d<=14)return 'expiring';
+  return 'active';
+}
+function fv(n){n=Number(n)||0;if(n>=100000000)return(n/100000000).toFixed(1)+'억';if(n>=10000)return(n/10000).toFixed(1)+'만';if(n>=1000)return(n/1000).toFixed(1)+'천';return n.toLocaleString();}
+function fd(d){return d?d.replace(/-/g,'.'):''}
+function timeAgo(ts){if(!ts)return '';const diff=Date.now()-ts;if(diff<60000)return '방금 전';if(diff<3600000)return Math.floor(diff/60000)+'분 전';if(diff<86400000)return Math.floor(diff/3600000)+'시간 전';return Math.floor(diff/86400000)+'일 전 갱신';}
+
+function renderStats(){
+  const total=vods.length;
+  const perm=vods.filter(v=>v.type==='permanent').length;
+  const tv=vods.reduce((a,b)=>a+(Number(b.views)||0),0);
+  const soon=vods.filter(v=>status(v)==='expiring').length;
+  document.getElementById('statsEl').innerHTML=`
+    <div class="stat"><div class="stat-lbl">총 VOD</div><div class="stat-val">${total}개</div></div>
+    <div class="stat"><div class="stat-lbl">총 조회수</div><div class="stat-val pu">${fv(tv)}</div></div>
+    <div class="stat"><div class="stat-lbl">영구보관</div><div class="stat-val">${perm}개</div></div>
+    <div class="stat"><div class="stat-lbl">만료 임박</div><div class="stat-val wa">${soon}개</div></div>`;
+}
+
+function render(){
+  const q=(document.getElementById('searchEl').value||'').toLowerCase();
+  const sort=document.getElementById('sortEl').value;
+  let list=vods.filter(v=>{
+    if(q&&!v.title.toLowerCase().includes(q))return false;
+    const s=status(v);
+    if(filt==='permanent')return v.type==='permanent';
+    if(filt==='expiring')return s==='expiring';
+    if(filt==='expired')return s==='expired';
+    return true;
+  });
+  list.sort((a,b)=>{
+    if(sort==='date-desc')return new Date(b.date||0)-new Date(a.date||0);
+    if(sort==='date-asc')return new Date(a.date||0)-new Date(b.date||0);
+    if(sort==='views-desc')return(Number(b.views)||0)-(Number(a.views)||0);
+    if(sort==='expire-asc'){const da=a.type==='permanent'?99999:(daysLeft(a.expire)||99999);const db=b.type==='permanent'?99999:(daysLeft(b.expire)||99999);return da-db;}
+    return 0;
+  });
+  document.getElementById('cntEl').textContent=list.length+'개';
+  const el=document.getElementById('listEl');
+  if(!list.length){el.innerHTML='<div class="empty"><i class="ti ti-video-off"></i>해당하는 VOD가 없어요</div>';return;}
+  el.innerHTML=list.map(v=>{
+    const s=status(v);
+    const dl=v.type!=='permanent'?daysLeft(v.expire):null;
+    let badge='',expTxt='';
+    if(v.type==='permanent'){badge=`<span class="badge b-perm"><i class="ti ti-infinity" style="font-size:10px"></i>영구보관</span>`;}
+    else if(s==='expired'){badge=`<span class="badge b-exp">만료됨</span>`;expTxt=`만료 ${fd(v.expire)}`;}
+    else if(s==='expiring'){badge=`<span class="badge b-soon"><i class="ti ti-alert-triangle" style="font-size:10px"></i>D-${dl}</span>`;expTxt=`만료 ${fd(v.expire)}`;}
+    else{badge=`<span class="badge b-ok">D-${dl}</span>`;expTxt=`만료 ${fd(v.expire)}`;}
+    const linkBtn=v.url&&v.url.startsWith('http')?`<button class="act" onclick="goLink(event,'${v.url}')" title="SOOP에서 보기"><i class="ti ti-external-link"></i></button>`:'';
+    const updTxt=v.viewsUpdated?`<span class="mt updated"><i class="ti ti-refresh"></i>${timeAgo(v.viewsUpdated)}</span>`:'';
+    return `<div class="vod-card ${s}">
+      <div>
+        <div class="vod-title">${v.title}</div>
+        <div class="vod-meta">
+          <span class="mt views"><i class="ti ti-eye"></i>${fv(v.views)}</span>
+          <span class="mt"><i class="ti ti-calendar"></i>${fd(v.date)}</span>
+          ${badge}${updTxt}
+          ${v.memo?`<span class="mt"><i class="ti ti-note"></i>${v.memo}</span>`:''}
+        </div>
+      </div>
+      <div class="vod-right">
+        <div class="expire-info">${expTxt}</div>
+        <div class="actions">
+          ${linkBtn}
+          <button class="act upd" onclick="openUpd(event,${v.id})" title="조회수 업데이트"><i class="ti ti-refresh"></i></button>
+          <button class="act" onclick="editVod(event,${v.id})" title="수정"><i class="ti ti-edit"></i></button>
+          <button class="act del" onclick="delVod(event,${v.id})" title="삭제"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function ra(){renderStats();render();}
+function goLink(e,url){e.stopPropagation();window.open(url,'_blank');}
+function setF(f,btn){filt=f;document.querySelectorAll('.ftag').forEach(b=>b.classList.remove('on'));btn.classList.add('on');render();}
+
+function autoExpire(){
+  const date=document.getElementById('f-date').value;
+  const type=document.getElementById('f-type').value;
+  if(type==='auto'&&date){const exp=autoExpireDate(date);document.getElementById('autoHint').textContent=`→ 만료일 자동 계산: ${fd(exp)} (2년)`;}  else document.getElementById('autoHint').textContent='';
+}
+function toggleExpire(){
+  document.getElementById('expFld').style.display=document.getElementById('f-type').value==='custom'?'block':'none';
+  autoExpire();
+}
+
+function openAdd(){
+  editId=null;
+  document.getElementById('modalTitle').textContent='VOD 추가';
+  ['f-title','f-url','f-memo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-views').value='';
+  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('f-type').value='auto';
+  document.getElementById('f-expire').value='';
+  document.getElementById('expFld').style.display='none';
+  autoExpire();
+  document.getElementById('addOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('f-title').focus(),80);
+}
+function editVod(e,id){
+  e.stopPropagation();
+  const v=vods.find(x=>x.id===id);if(!v)return;
+  editId=id;
+  document.getElementById('modalTitle').textContent='VOD 수정';
+  document.getElementById('f-title').value=v.title;
+  document.getElementById('f-url').value=v.url||'';
+  document.getElementById('f-views').value=v.views||'';
+  document.getElementById('f-date').value=v.date||'';
+  document.getElementById('f-type').value=v.storageType||'auto';
+  document.getElementById('f-expire').value=v.expire||'';
+  document.getElementById('f-memo').value=v.memo||'';
+  document.getElementById('expFld').style.display=v.storageType==='custom'?'block':'none';
+  autoExpire();
+  document.getElementById('addOverlay').classList.add('open');
+}
+function closeAdd(){document.getElementById('addOverlay').classList.remove('open');}
+
+function saveVod(){
+  const title=document.getElementById('f-title').value.trim();
+  if(!title){alert('제목을 입력해주세요!');return;}
+  const date=document.getElementById('f-date').value;
+  const storageType=document.getElementById('f-type').value;
+  let expire=null,type='timed';
+  if(storageType==='permanent')type='permanent';
+  else if(storageType==='custom')expire=document.getElementById('f-expire').value;
+  else expire=autoExpireDate(date);
+  const existing=editId?vods.find(x=>x.id===editId):null;
+  const obj={
+    id:editId||nextId++,title,
+    url:document.getElementById('f-url').value.trim(),
+    views:parseInt(document.getElementById('f-views').value)||0,
+    date,type,storageType,expire,
+    memo:document.getElementById('f-memo').value.trim(),
+    viewsUpdated:existing?.viewsUpdated||null,
+  };
+  if(editId){const i=vods.findIndex(x=>x.id===editId);vods[i]=obj;}
+  else vods.push(obj);
+  save();closeAdd();ra();
+}
+
+function openUpd(e,id){
+  e.stopPropagation();
+  const v=vods.find(x=>x.id===id);if(!v)return;
+  updId=id;
+  document.getElementById('updTitle').textContent=v.title;
+  document.getElementById('upd-views').value=v.views||'';
+  document.getElementById('updOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('upd-views').focus(),80);
+}
+function closeUpd(){document.getElementById('updOverlay').classList.remove('open');}
+function applyUpd(){
+  const views=parseInt(document.getElementById('upd-views').value)||0;
+  const i=vods.findIndex(x=>x.id===updId);
+  if(i>=0){vods[i].views=views;vods[i].viewsUpdated=Date.now();}
+  save();closeUpd();ra();
+}
+
+function delVod(e,id){
+  e.stopPropagation();
+  if(!confirm('이 VOD를 삭제할까요?'))return;
+  vods=vods.filter(v=>v.id!==id);save();ra();
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify({vods,nextId},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deary_vod_backup.json';a.click();
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.vods){vods=d.vods;nextId=d.nextId||vods.length+1;save();ra();}}catch{alert('파일을 읽는데 실패했어요.');}};
+  r.readAsText(file);
+}
+
+[document.getElementById('addOverlay'),document.getElementById('updOverlay')].forEach(el=>{
+  el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+});
+
+load();ra();
+</script>
+</body>
+</html>
